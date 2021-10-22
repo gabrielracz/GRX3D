@@ -34,9 +34,9 @@ u + o --> Translate Z position
 //  -Create HUD elements on webpage indicating position, model name, color, ...
 //  -Create file parser that interprets object files from real modelling programs
 
-var gVariableStrokeIntensity = true;        //Wireframe mode
-var gWireFrame = false;
-var gAngle;
+var g_VariableStrokeIntensity = true;        //Wireframe mode
+var g_WireFrame = false;
+var g_Angle;
 const COLORS = [
     [237, 40, 76],
     [255, 136, 0],
@@ -49,7 +49,7 @@ const COLORS = [
     [60, 56, 54]
 ];
 
-const PRED      = 0; 
+const PRED      = -1; 
 const AMBER     = 1;
 const GREEN     = 2;
 const LBLUE     = 3;
@@ -63,9 +63,9 @@ const DGREY     = 10;
 
 
 
-var gVariableStrokeIntensity = true;        //Wireframe mode
-var gWireFrame = false;
-var gAngle;
+var g_VariableStrokeIntensity = true;        //Wireframe mode
+var g_WireFrame = false;
+var g_Angle;
 
 function main(){
     //Get canvas data
@@ -78,18 +78,20 @@ function main(){
 
     //Init vars
     let init_x = 0;
-    let init_y = -50;
+    let init_y = 0;
     let init_z = 0;
-    let size = 100;
-	let d  = 500;
-    let fill_colour = COLORS[GREEN];
-    let stroke_colour = COLORS[GREEN];
-    // gVariableStrokeIntensity = false;	
+    let size = 200;
+	let d  = 1000;
+    let fill_colour = COLORS[LGREY];
+    let stroke_colour = COLORS[LGREY];
+    // g_VariableStrokeIntensity = false;	
 
     var camera = [0, 0, d, 1];
 
 
-    var model_data = ConstructOctahedron(init_x, init_y, init_z, size);
+
+
+    var model_data = ConstructCube(init_x, init_y, init_z, size);
     var model = {
         mesh: model_data[0],        //Contains vertex vector data
         triangles: model_data[1],    //Stores mesh indexes to construct each triangle
@@ -99,8 +101,8 @@ function main(){
     };
 
 
-    model.mesh = RotateX3D(model.mesh, Math.PI, init_x, init_y, init_z);
-    model.mesh = RotateZ3D(model.mesh, 1.67, init_x, init_y, init_z);
+    model.mesh = RotateX3D(model.mesh, Math.PI/2, init_x, init_y, init_z);
+    // model.mesh = RotateZ3D(model.mesh, 1.67, init_x, init_y, init_z);
     model.mesh = RotateY3D(model.mesh, 1, init_x, init_y, init_z);
 
     var transformations = {
@@ -178,8 +180,11 @@ function main(){
             case '5':
                 model_manager = 5;
                 break;
+            case '6':
+                model_manager = 6;
+                break;
             case ']':
-                gWireFrame = (gWireFrame + 1) % 2;
+                g_WireFrame = (g_WireFrame + 1) % 2;
                 break;
             case '[':
                 color_index = (color_index + 1) % COLORS.length;
@@ -233,6 +238,14 @@ function main(){
     
     var angle = 0.05;
     var dist = 3;
+    var model_catalogue = {
+        1: ConstructTetrahedron,
+        2: ConstructPyramid,
+        3: ConstructOctahedron,
+        4: ConstructCube,
+        5: ConstructIcosahedron,
+        6: ConstructHeart
+    }
     function loop(){
         //Perform Rotations
         if(transformations.rotx){
@@ -254,8 +267,8 @@ function main(){
             model.centery += dist * transformations.transy;
         }
 
-        if(model_manager == 1){
-            model_data = ConstructTetrahedron(model.centerx, model.centery, model.centerz, size);
+        if(model_manager){
+            model_data = model_catalogue[model_manager](model.centerx, model.centery, model.centerz, size);
             var new_model = {
                 mesh: model_data[0],
                 triangles: model_data[1],
@@ -264,51 +277,9 @@ function main(){
                 centerz: model.centerz
             };
             model = new_model;
+            model.mesh = RotateX3D(model.mesh, Math.PI, init_x, init_y, init_z);
             model_manager = 0;
-        }else if(model_manager == 2){
-            model_data = ConstructPyramid(model.centerx, model.centery, model.centerz, size);
-            var new_model = {
-                mesh: model_data[0],
-                triangles: model_data[1],
-                centerx: model.centerx,
-                centery: model.centery,
-                centerz: model.centerz
-            };
-            model = new_model;
-            model_manager = 0;
-        }else if(model_manager == 3){
-            model_data = ConstructCube(model.centerx, model.centery, model.centerz, size);
-            var new_model = {
-                mesh: model_data[0],
-                triangles: model_data[1],
-                centerx: model.centerx,
-                centery: model.centery,
-                centerz: model.centerz
-            };
-            model = new_model;
-            model_manager = 0;
-        }else if(model_manager == 4){
-            model_data = ConstructOctahedron(model.centerx, model.centery, model.centerz, size);
-            var new_model = {
-                mesh: model_data[0],
-                triangles: model_data[1],
-                centerx: model.centerx,
-                centery: model.centery,
-                centerz: model.centerz
-            };
-            model = new_model;
-            model_manager = 0;
-        }else if(model_manager == 5){
-            model_data = ConstructIcosahedron(model.centerx, model.centery, model.centerz, size);
-            var new_model = {
-                mesh: model_data[0],
-                triangles: model_data[1],
-                centerx: model.centerx,
-                centery: model.centery,
-                centerz: model.centerz
-            };
-            model = new_model;
-            model_manager = 0;
+
         }
 
         DrawMesh(model.mesh, model.triangles, camera, ctx, fill_colour, stroke_colour);
@@ -358,14 +329,16 @@ function DrawMesh(mesh, triangles, camera, ctx, fill_colour = [200, 200, 200], s
             path.lineTo(proj[t[2]][0] + screen_width/2, proj[t[2]][1] + screen_height/2);
             path.lineTo(proj[t[0]][0] + screen_width/2, proj[t[0]][1] + screen_height/2);
 
-            if(gWireFrame){
+            if(g_WireFrame){
+                ctx.fillStyle = "rgb(0, 0, 0)";
+                ctx.fill(path);
                 ctx.strokeStyle = "rgb(" + stroke_colour[0] + ", " + stroke_colour[1] + ", " + stroke_colour[2] + ", 255)";
                 ctx.stroke(path);
                 continue;
             }
 
             ctx.fillStyle = "rgb(" + light_intensity*fill_colour[0] + ", " + light_intensity*fill_colour[1] + ", " + light_intensity*fill_colour[2] + ", 255)";
-            if(gVariableStrokeIntensity){
+            if(g_VariableStrokeIntensity){
                 ctx.strokeStyle = "rgb(" + light_intensity*stroke_colour[0] + ", " + light_intensity*stroke_colour[1] + ", " + light_intensity*stroke_colour[2] + ", 255)";
             }else{
                 ctx.strokeStyle = "rgb(" + stroke_colour[0] + ", " + stroke_colour[1] + ", " + stroke_colour[2] + ", 255)";
