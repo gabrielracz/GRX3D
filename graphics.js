@@ -30,7 +30,7 @@ u + o --> Translate Z position
 //  TODO:
 //  -Create classes (model, vec2d, vec3d, matrix3d, ...)
 //  -Reduce copy pasted code in loop function
-//  -Combine all transformations matricies into one matrix that performs them all
+//  -Combine all transformationManager matricies into one matrix that performs them all
 //  -Create HUD elements on webpage indicating position, model name, color, ...
 //  -Create file parser that interprets object files from real modelling programs
 
@@ -67,6 +67,12 @@ var g_VariableStrokeIntensity = true;        //Wireframe mode
 var g_WireFrame = false;
 var g_Angle;
 
+class Model {
+    constructor(initX, initY, initZ, loader){
+        // triangles 
+    }
+}
+
 function main(){
     //Get canvas data
     var canvas = document.querySelector('canvas');
@@ -101,11 +107,9 @@ function main(){
     };
 
 
-    model.mesh = RotateX3D(model.mesh, Math.PI/2, init_x, init_y, init_z);
-    // model.mesh = RotateZ3D(model.mesh, 1.67, init_x, init_y, init_z);
-    model.mesh = RotateY3D(model.mesh, 1, init_x, init_y, init_z);
+    model.mesh = RotateX3D(model.mesh, Math.PI/2, init_x, init_y, init_z);      //Make shape right side up do to reverse of Y axis
 
-    var transformations = {
+    var transformationManager = {
         rotx: 0,
         roty: 0,
         rotz: 0,
@@ -116,125 +120,13 @@ function main(){
     };
 
 
-    var model_manager = 0;
-    var color_index = 0;
-    canvas.addEventListener("keydown", function HandleKeyDown(e){
-        // console.log(e.key);
-        switch(e.key){
-            case 'w':
-                transformations.rotx = 1;
-                break;
-            case 's':
-                transformations.rotx = -1;
-                break;
-            case 'd':
-                transformations.roty = 1;
-                break;
-            case 'a':
-                transformations.roty = -1;
-                break;
-            case 'e':
-                transformations.rotz = 1;
-                break;
-            case 'q':
-                transformations.rotz = -1;
-                break;
-            case "Shift":
-                transformations.rotlock = !transformations.rotlock;
-                if(!transformations.rotlock){
-                    transformations.rotx = 0;
-                    transformations.roty = 0;
-                    transformations.rotz = 0;
-                }
-                break;
-            case "l":
-                transformations.transx = 1;
-                break;
-            case "j":
-                transformations.transx = -1;
-                break;
-            case "k":
-                transformations.transy = 1;
-                break;
-            case "i":
-                transformations.transy = -1;
-                break;
-            case ".":
-                camera[2] += 100;
-                break;
-            case ",":
-                camera[2] -= 100;
-                break;
-            case '1':
-                model_manager = 1;
-                break;
-            case '2':
-                model_manager = 2;
-                break;
-            case '3':
-                model_manager = 3;
-                break;
-            case '4':
-                model_manager = 4;
-                break;
-            case '5':
-                model_manager = 5;
-                break;
-            case '6':
-                model_manager = 6;
-                break;
-            case ']':
-                g_WireFrame = (g_WireFrame + 1) % 2;
-                break;
-            case '[':
-                color_index = (color_index + 1) % COLORS.length;
-                fill_colour = COLORS[color_index];
-                stroke_colour = COLORS[color_index];
-                break;
-        }
-    });
-    canvas.addEventListener("keyup", function HandleKeyUp(e){
-        switch(e.key){
-            case 'w':
-                if(!transformations.rotlock)
-                    transformations.rotx =0;
-                break;
-            case 's':
-                if(!transformations.rotlock)
-                    transformations.rotx =0;
-                break;
-            case 'd':
-                if(!transformations.rotlock)
-                    transformations.roty =0;
-                break;
-            case 'a':
-                if(!transformations.rotlock)
-                    transformations.roty = 0;
-                break;
-            case 'e':
-                if(!transformations.rotlock)
-                    transformations.rotz = 0;
-                break;
-            case 'q':
-                if(!transformations.rotlock)
-                    transformations.rotz = 0;
-                break;
-            case 'l':
-                transformations.transx = 0;
-                break;
-            case 'j':
-                transformations.transx = 0;
-                break;
-            case 'i':
-                transformations.transy = 0;
-                break;
-            case 'k':
-                transformations.transy = 0;
-                break;
-            
-            
-        }
-    }); 
+    var modelManager = {value:0};
+    var colorManager = {index:9};
+    addKeydownHandler(canvas, modelManager, transformationManager, colorManager);
+    addKeyupHandler(canvas,transformationManager)
+
+    
+    
     
     var angle = 0.05;
     var dist = 3;
@@ -248,27 +140,27 @@ function main(){
     }
     function loop(){
         //Perform Rotations
-        if(transformations.rotx){
-            model.mesh = RotateX3D(model.mesh, angle * transformations.rotx, model.centerx, model.centery, model.centerz);
+        if(transformationManager.rotx){
+            model.mesh = RotateX3D(model.mesh, angle * transformationManager.rotx, model.centerx, model.centery, model.centerz);
         }
-        if(transformations.roty){
-            model.mesh = RotateY3D(model.mesh, angle * transformations.roty, model.centerx, model.centery, model.centerz);
+        if(transformationManager.roty){
+            model.mesh = RotateY3D(model.mesh, angle * transformationManager.roty, model.centerx, model.centery, model.centerz);
         }
-        if(transformations.rotz){
-            model.mesh = RotateZ3D(model.mesh, angle * transformations.rotz, model.centerx, model.centery, model.centerz);
+        if(transformationManager.rotz){
+            model.mesh = RotateZ3D(model.mesh, angle * transformationManager.rotz, model.centerx, model.centery, model.centerz);
         }
 
         //Perform Translations
-        if(transformations.transx){
-            model.mesh = TranslateX3D(model.mesh, dist * transformations.transx);
-            model.centerx += dist * transformations.transx;
-        }if(transformations.transy){
-            model.mesh = TranslateY3D(model.mesh, dist * transformations.transy);
-            model.centery += dist * transformations.transy;
+        if(transformationManager.transx){
+            model.mesh = TranslateX3D(model.mesh, dist * transformationManager.transx);
+            model.centerx += dist * transformationManager.transx;
+        }if(transformationManager.transy){
+            model.mesh = TranslateY3D(model.mesh, dist * transformationManager.transy);
+            model.centery += dist * transformationManager.transy;
         }
 
-        if(model_manager){
-            model_data = model_catalogue[model_manager](model.centerx, model.centery, model.centerz, size);
+        if(modelManager.value){
+            model_data = model_catalogue[modelManager.value](model.centerx, model.centery, model.centerz, size);
             var new_model = {
                 mesh: model_data[0],
                 triangles: model_data[1],
@@ -278,14 +170,17 @@ function main(){
             };
             model = new_model;
             model.mesh = RotateX3D(model.mesh, Math.PI, init_x, init_y, init_z);
-            model_manager = 0;
+            modelManager.value = 0;
 
         }
-
+        fill_colour = COLORS[colorManager.index];
+        stroke_colour = COLORS[colorManager.index];
         DrawMesh(model.mesh, model.triangles, camera, ctx, fill_colour, stroke_colour);
     }
     setInterval(loop, 30);
 }
+
+
 
 function DrawMesh(mesh, triangles, camera, ctx, fill_colour = [200, 200, 200], stroke_colour = fill_colour){
     let screen_width = ctx.canvas.width;
@@ -631,7 +526,6 @@ function TranslateZ3D(matrix, direction){
         }
     }
     return result;
-    Consttr
 }
 
 
@@ -756,4 +650,128 @@ function PrintMatrix(matrix){
 }
 
 
+
+//      EVENT HANDLERS
+function addKeydownHandler(canvas, modelManager, transformationManager, colorManager){
+    canvas.addEventListener("keydown", function HandleKeyDown(e){
+        switch(e.key){
+            case 'w':
+                transformationManager.rotx = 1;
+                break;
+            case 's':
+                transformationManager.rotx = -1;
+                break;
+            case 'd':
+                transformationManager.roty = 1;
+                break;
+            case 'a':
+                transformationManager.roty = -1;
+                break;
+            case 'e':
+                transformationManager.rotz = 1;
+                break;
+            case 'q':
+                transformationManager.rotz = -1;
+                break;
+            case "Shift":
+                transformationManager.rotlock = !transformationManager.rotlock;
+                if(!transformationManager.rotlock){
+                    transformationManager.rotx = 0;
+                    transformationManager.roty = 0;
+                    transformationManager.rotz = 0;
+                }
+                break;
+            case "l":
+                transformationManager.transx = 1;
+                break;
+            case "j":
+                transformationManager.transx = -1;
+                break;
+            case "k":
+                transformationManager.transy = 1;
+                break;
+            case "i":
+                transformationManager.transy = -1;
+                break;
+            case ".":
+                camera[2] += 100;
+                break;
+            case ",":
+                camera[2] -= 100;
+                break;
+            case '1':
+                modelManager.value = 1;
+                break;
+            case '2':
+                modelManager.value = 2;
+                break;
+            case '3':
+                modelManager.value = 3;
+                break;
+            case '4':
+                modelManager.value = 4;
+                break;
+            case '5':
+                modelManager.value = 5;
+                break;
+            case '6':
+                modelManager.value = 6;
+                break;
+            case ']':
+                g_WireFrame = (g_WireFrame + 1) % 2;
+                break;
+            case '[':
+                colorManager.index = (colorManager.index + 1) % COLORS.length;
+
+                break;
+        }
+    });
+}
+
+function addKeyupHandler(canvas, transformationManager){
+    canvas.addEventListener("keyup", function HandleKeyUp(e){
+        switch(e.key){
+            case 'w':
+                if(!transformationManager.rotlock)
+                    transformationManager.rotx =0;
+                break;
+            case 's':
+                if(!transformationManager.rotlock)
+                    transformationManager.rotx =0;
+                break;
+            case 'd':
+                if(!transformationManager.rotlock)
+                    transformationManager.roty =0;
+                break;
+            case 'a':
+                if(!transformationManager.rotlock)
+                    transformationManager.roty = 0;
+                break;
+            case 'e':
+                if(!transformationManager.rotlock)
+                    transformationManager.rotz = 0;
+                break;
+            case 'q':
+                if(!transformationManager.rotlock)
+                    transformationManager.rotz = 0;
+                break;
+            case 'l':
+                transformationManager.transx = 0;
+                break;
+            case 'j':
+                transformationManager.transx = 0;
+                break;
+            case 'i':
+                transformationManager.transy = 0;
+                break;
+            case 'k':
+                transformationManager.transy = 0;
+                break;
+            
+            
+        }
+    }); 
+}
+
+//Run the program
 main();
