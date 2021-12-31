@@ -45,7 +45,7 @@ const COLORS = [
     [85, 0, 255],
     [140, 255, 0],
     [223, 21, 330],
-    [200, 200, 200],
+    [224, 215, 202],
     [60, 56, 54]
 ];
 
@@ -67,6 +67,8 @@ var g_VariableStrokeIntensity = true;        //Wireframe mode
 var g_WireFrame = false;
 var g_Angle;
 
+var model = {};
+
 class Model {
     constructor(initX, initY, initZ, loader){
         // triangles 
@@ -77,10 +79,11 @@ function main(){
     //Get canvas data
     var canvas = document.querySelector('canvas');
     canvas.focus();
-    canvas.width = 600;
-    canvas.height = 600;
-    console.log(canvas);
+    canvas.width = window.innerWidth*0.6;
+    canvas.height = canvas.width*2/3;
     var ctx = canvas.getContext("2d");      //Used to manipulate shapes
+
+    document.getElementById("fileupload").addEventListener("change", LoadObjectFile);
 
     //Init vars
     let init_x = 0;
@@ -94,11 +97,8 @@ function main(){
 
     var camera = [0, 0, d, 1];
 
-
-
-
     var model_data = ConstructCube(init_x, init_y, init_z, size);
-    var model = {
+    model = {
         mesh: model_data[0],        //Contains vertex vector data
         triangles: model_data[1],    //Stores mesh indexes to construct each triangle
         centerx: init_x,
@@ -125,9 +125,6 @@ function main(){
     addKeydownHandler(canvas, modelManager, transformationManager, colorManager);
     addKeyupHandler(canvas,transformationManager)
 
-    
-    
-    
     var angle = 0.05;
     var dist = 3;
     var model_catalogue = {
@@ -180,7 +177,45 @@ function main(){
     setInterval(loop, 30);
 }
 
+function LoadObjectFile(event){
+    //Init file reader
+    reader = new FileReader();
+    reader.readAsText(event.target.files[0]);
+    reader.onload = readSuccess;
 
+    let mesh = [];
+    let triangles = [];
+
+    //Construct object
+    function readSuccess(){
+        let obj = reader.result.split("\n");
+
+        let scale = 1;
+
+        for(let i = 0; i < obj.length; i++){
+            let line = obj[i];
+            if(line.startsWith("v")){        //Vertex (mesh point)
+                let s = line.split(" ");        //Split at spaces and put the 3 following coordinates into a point
+                let v = [Number(s[1] * scale), Number(s[2] * scale), Number(s[3] * scale), 1];
+                mesh.push(v);
+            }else if(line.startsWith("f")){      //Face (triangle)
+                let s = line.split(" ");
+                let t = [Number(s[1])-1, Number(s[2])-1, Number(s[3])-1];
+                triangles.push(t);
+            }
+       }
+
+       document.getElementById("vertex-count").innerHTML = mesh.length;
+       document.getElementById("triangle-count").innerHTML = triangles.length;
+       model.mesh = mesh;
+       model.triangles = triangles;
+       model.centerx = 0;
+       model.centery = 0;
+       model.centerz = 0;
+       model.mesh = RotateZ3D(model.mesh, Math.PI, 0, 0, 0);
+       console.log("obj created")
+    }
+}
 
 function DrawMesh(mesh, triangles, camera, ctx, fill_colour = [200, 200, 200], stroke_colour = fill_colour){
     let screen_width = ctx.canvas.width;
@@ -200,7 +235,6 @@ function DrawMesh(mesh, triangles, camera, ctx, fill_colour = [200, 200, 200], s
         }
     );
 
-    
     ctx.beginPath();
     //ctx.strokeStyle = stroke_colour;
     for(let i = 0; i < sorted_triangles.length; i++){
@@ -219,6 +253,8 @@ function DrawMesh(mesh, triangles, camera, ctx, fill_colour = [200, 200, 200], s
         //When the dot product is positive, the normal is pointed towards the camera's line of sight and the triangle should be drawn
         if(dotProduct > 0){
             let path =  new Path2D();
+
+            //Line to each triangle vertex
             path.moveTo(proj[t[0]][0] + screen_width/2, proj[t[0]][1] + screen_height/2);
             path.lineTo(proj[t[1]][0] + screen_width/2, proj[t[1]][1] + screen_height/2);
             path.lineTo(proj[t[2]][0] + screen_width/2, proj[t[2]][1] + screen_height/2);
@@ -357,7 +393,6 @@ function ConstructCube(x, y, z, size){
 
 
 function ConstructHeart(x, y, z, size){
-
     let v1 = [x, y + size, z, 1];
     let v2 = [x - size, y, z + size/2, 1];
     let v3 = [x + size/2, y, z + size/2, 1];
@@ -421,7 +456,6 @@ function ConstructTetrahedron(x, y, z, size){
     ];
 
     return[mesh, triangles];
-
 }
 
 function ConstructOctahedron(x, y, z, size){

@@ -1,11 +1,10 @@
 html {
-    font-family: "Consolas", monospace;
-    color: white;
+    font-family: "Tahoma", "Consolas", monospace;
+    color: #E2D6C5;
+    background-color: #181A1B;
 }
 
 canvas {
-    height: 100%;
-    width: 100%;
     background-color: black;
 
     padding-left: 0;
@@ -13,12 +12,8 @@ canvas {
     margin-left: auto;
     margin-right: auto;
     display: block;
-    width: 600px;
-    height: 600px;
-}
-
-canvas:focus {
-    outline: none !important;
+    width: 100%;
+    outline: #E2D6C5 1px dotted;
 }
 
 body { 
@@ -26,15 +21,17 @@ body {
     background-color: black;
 }
 
+
 .column-left {
     font-size: 120%;
     margin-left: 2%;
     float: left;
-    width: 30%;
+    width: 28%;
 }
 
 .column-right {
     float: left;
+    display: inline;
 }
 
 .control-label {
@@ -43,10 +40,10 @@ body {
 
 .header {
     /* text-align: left; */
-    margin-left: 2%;
     font-weight: normal;
     font-size: 200%;
-    font-family:'Times New Roman', Times, serif;
+    /* color: #87FFAF; */
+    /* font-family:'Times New Roman', Times, serif; */
 }
 
 .subheader{
@@ -55,4 +52,8 @@ body {
     margin-bottom: 0;
     font-weight: normal;
     font-size: 130%;
+}
+
+.menu-line {
+    border-top: 1px solid lightgray;
 }

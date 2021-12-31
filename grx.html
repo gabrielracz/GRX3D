@@ -6,9 +6,9 @@
         <title>3D Renderer</title>
     </head>
     <body>
-        <h1 class=header>GRX 3D Graphics Engine</h1>
         <div class="column-left">
-            <label>CONTROLS</label><br><br>
+            <h1 class=header><u>GRX3D Rendering Engine</u></h1>
+            <label><b>CONTROLS</b></label><hr class=".menu-line">
             <label>Rotations</label><br>
             <label class="control-label">w + s --> X axis</label><br>
             <label class="control-label">a + d --> Y axis</label><br>
@@ -29,9 +29,15 @@
             <label class="control-label"> 3 --> Octahedron</label><br>
             <label class="control-label"> 4 --> Cube</label><br>
             <label class="control-label"> 5 --> Icosahedron</label><br>
+            <br>
+            <label> UPLOAD </label><hr class="menu-line">
+            <input id="fileupload" type="file" accept=".obj" style="color: #E2D6C5;"></input>
         </div>
         <div class="column-right">
-            <canvas id="canvas" tabindex="1"></canvas>2
+            <br><br>
+            <label>Verticies: </label><label id="vertex-count"></label><br>
+            <label>Triangles: </label><label id="triangle-count"></label>
+            <canvas id="canvas" tabindex="1"></canvas>
         </div>
         <script onload src="graphics.js"></script>
     </body>
